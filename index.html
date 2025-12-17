@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Task Manager Intranet</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- SortableJS -->
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+  <style>
+    body {
+      background: #f4f5f7;
+      font-family: Arial, sans-serif;
+    }
+    .board {
+      display: flex;
+      gap: 15px;
+      padding: 20px;
+    }
+    .column {
+      background: #ebecf0;
+      border-radius: 8px;
+      width: 100%;
+      padding: 10px;
+    }
+    .column h5 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .task {
+      background: #fff;
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      cursor: grab;
+      box-shadow: 0 1px 2px rgba(0,0,0,.15);
+    }
+    .task small {
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark bg-dark">
+  <div class="container-fluid">
+    <span class="navbar-brand">📋 Task Manager Intranet</span>
+    <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#taskModal">
+      + Nova Tarefa
+    </button>
+  </div>
+</nav>
+
+<div class="board">
+  <div class="column" id="todo">
+    <h5>A Fazer</h5>
+  </div>
+
+  <div class="column" id="doing">
+    <h5>Em Andamento</h5>
+  </div>
+
+  <div class="column" id="done">
+    <h5>Concluído</h5>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="taskModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Nova Tarefa</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <input type="text" id="title" class="form-control mb-2" placeholder="Título da tarefa">
+        <textarea id="description" class="form-control mb-2" placeholder="Descrição"></textarea>
+        <input type="date" id="dueDate" class="form-control">
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="addTask()">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const columns = ["todo", "doing", "done"];
+
+  columns.forEach(col => {
+    new Sortable(document.getElementById(col), {
+      group: "tasks",
+      animation: 150,
+      onEnd: saveTasks
+    });
+  });
+
+  function addTask() {
+    const title = document.getElementById("title").value;
+    const description = document.getElementById("description").value;
+    const dueDate = document.getElementById("dueDate").value;
+
+    if (!title) return;
+
+    const task = document.createElement("div");
+    task.className = "task";
+    task.innerHTML = `
+      <strong>${title}</strong><br>
+      <small>${description || ""}</small><br>
+      <small>📅 ${dueDate || "Sem data"}</small>
+    `;
+
+    document.getElementById("todo").appendChild(task);
+    saveTasks();
+
+    document.getElementById("title").value = "";
+    document.getElementById("description").value = "";
+    document.getElementById("dueDate").value = "";
+
+    bootstrap.Modal.getInstance(document.getElementById("taskModal")).hide();
+  }
+
+  function saveTasks() {
+    const data = {};
+    columns.forEach(col => {
+      data[col] = document.getElementById(col).innerHTML;
+    });
+    localStorage.setItem("tasks", JSON.stringify(data));
+  }
+
+  function loadTasks() {
+    const data = JSON.parse(localStorage.getItem("tasks"));
+    if (!data) return;
+
+    columns.forEach(col => {
+      document.getElementById(col).innerHTML = data[col];
+    });
+  }
+
+  loadTasks();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
