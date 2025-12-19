@@ -299,4 +299,128 @@ class TrelloClone {
     }
 
     deleteCard() {
-        if (confirm('Tem certeza que
+        if (confirm('Tem certeza que deseja excluir este card?')) {
+            this.boards[this.currentCard.boardIndex].cards.splice(this.currentCard.cardIndex, 1);
+            this.saveData();
+            this.renderBoards();
+            this.hideCardDetailModal();
+        }
+    }
+
+    hideCardDetailModal() {
+        document.getElementById('cardDetailModal').classList.remove('active');
+        this.currentCard = null;
+    }
+
+    saveData() {
+        localStorage.setItem('trello-boards', JSON.stringify(this.boards));
+    }
+
+    formatDate(dateString) {
+        return new Date(dateString).toLocaleDateString('pt-BR');
+    }
+
+    checkReminders() {
+        const now = new Date();
+        this.boards.forEach(board => {
+            board.cards.forEach(card => {
+                if (card.date) {
+                    const cardDate = new Date(card.date);
+                    cardDate.setHours(0, 0, 0, 0);
+                    now.setHours(0, 0, 0, 0);
+                    
+                    if (cardDate.getTime() === now.getTime()) {
+                        if (!card.notified) {
+                            this.showNotification(`${card.title} vence hoje!`);
+                            card.notified = true;
+                            this.saveData();
+                        }
+                    }
+                }
+            });
+        });
+    }
+
+    showNotification(message) {
+        if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification('Lembrete Trello', { body: message });
+        } else if (Notification.permission !== 'denied') {
+            Notification.requestPermission();
+        }
+        
+        // Fallback visual
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.textContent = message;
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #ef4444;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            z-index: 10000;
+            animation: slideIn 0.3s ease;
+        `;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.remove();
+        }, 4000);
+    }
+
+    openConfig() {
+        window.open('config.html', '_blank');
+    }
+}
+
+// Inicialização
+document.addEventListener('DOMContentLoaded', () => {
+    new TrelloClone();
+});
+
+// Drag & Drop global handlers
+document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('dragstart', (e) => {
+        if (e.target.classList.contains('card')) {
+            trelloClone.handleDragStart(e);
+        }
+    });
+    
+    document.addEventListener('dragend', (e) => {
+        if (e.target.classList.contains('card')) {
+            e.target.classList.remove('dragging');
+            trelloClone.currentDragging = null;
+        }
+    });
+
+    // Click em cards para abrir detalhes
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.card')) {
+            const card = e.target.closest('.card');
+            const boardIndex = parseInt(card.dataset.boardIndex);
+            const cardIndex = parseInt(card.dataset.cardIndex);
+            const cardData = trelloClone.boards[boardIndex].cards[cardIndex];
+            trelloClone.showCardDetail(cardData, boardIndex, cardIndex);
+        }
+    });
+
+    // Botões de ação nos modais de detalhes
+    document.addEventListener('click', (e) => {
+        if (e.target.id === 'deleteCardBtn') {
+            trelloClone.deleteCard();
+        }
+        if (e.target.id === 'editCardLabelBtn') {
+            // Implementar edição de label
+            alert('Edição de label em desenvolvimento');
+        }
+        if (e.target.id === 'editCardDateBtn') {
+            // Implementar edição de data
+            alert('Edição de data em desenvolvimento');
+        }
+    });
+});
+
+let trelloClone;
