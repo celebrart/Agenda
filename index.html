@@ -1,239 +1,207 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+<!DOCTYPE html><html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Task Board</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<!-- Font -->
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-
-<!-- Sortable -->
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-
-<style>
-:root {
-  --bg: #f4f5f7;
-  --list: #ebecf0;
-  --card: #ffffff;
-  --text: #172b4d;
-  --muted: #6b778c;
-  --primary: #0052cc;
-}
-
-* { box-sizing: border-box; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mini Trello - Kanban</title>
+  <style>
+    :root {
+      --bg: #5e4b8b;
+      --list-bg: #f4f5f7;
+      --card-bg: #fff;
+      --primary: #6f5bd7;
+      --text: #172b4d;
+    }* { box-sizing: border-box; font-family: Arial, Helvetica, sans-serif; }
 
 body {
   margin: 0;
-  font-family: 'Inter', sans-serif;
-  background: var(--bg);
+  background: linear-gradient(135deg, #5e4b8b, #8b5fbf);
   color: var(--text);
 }
 
 header {
-  background: var(--primary);
-  color: white;
-  padding: 12px 20px;
-  font-weight: 600;
+  background: #3e2f5b;
+  color: #fff;
+  padding: 12px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
+header h1 { font-size: 18px; margin: 0; }
+
 header button {
-  background: #ffffff;
-  color: var(--primary);
+  background: var(--primary);
   border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 6px;
   cursor: pointer;
-  font-weight: 600;
+}
+
+main {
+  padding: 16px;
+  overflow-x: auto;
 }
 
 .board {
   display: flex;
   gap: 16px;
-  padding: 20px;
-  overflow-x: auto;
+  min-height: calc(100vh - 80px);
 }
 
 .list {
-  background: var(--list);
-  border-radius: 8px;
+  background: var(--list-bg);
   width: 280px;
-  padding: 10px;
-  flex-shrink: 0;
+  border-radius: 8px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
 }
 
-.list h3 {
-  font-size: 14px;
-  font-weight: 600;
-  margin: 5px 5px 10px;
+.list header {
+  background: transparent;
+  color: var(--text);
+  padding: 4px;
+  font-weight: bold;
 }
 
-.cards {
-  min-height: 40px;
-}
+.cards { flex: 1; display: flex; flex-direction: column; gap: 8px; }
 
 .card {
-  background: var(--card);
+  background: var(--card-bg);
+  padding: 8px;
   border-radius: 6px;
-  padding: 10px;
-  margin-bottom: 8px;
-  box-shadow: 0 1px 2px rgba(0,0,0,.15);
+  box-shadow: 0 1px 3px rgba(0,0,0,.2);
   cursor: grab;
 }
 
-.card small {
-  color: var(--muted);
-  display: block;
-  margin-top: 4px;
-}
-
-.card .actions {
-  margin-top: 6px;
-  display: flex;
-  gap: 6px;
-}
-
-.card button {
+.add-card {
+  background: none;
   border: none;
-  background: transparent;
+  color: #555;
+  text-align: left;
+  padding: 6px;
   cursor: pointer;
-  color: var(--muted);
 }
 
+.add-list {
+  min-width: 280px;
+  background: rgba(255,255,255,.2);
+  color: #fff;
+  border-radius: 8px;
+  padding: 12px;
+  cursor: pointer;
+  height: fit-content;
+}
+
+/* Modal */
 .modal {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,.4);
+  background: rgba(0,0,0,.5);
   display: none;
-  align-items: center;
   justify-content: center;
+  align-items: center;
 }
 
 .modal-content {
-  background: white;
-  padding: 20px;
-  width: 320px;
+  background: #fff;
+  padding: 16px;
   border-radius: 8px;
+  width: 90%;
+  max-width: 400px;
 }
 
-.modal-content input,
-.modal-content textarea,
-.modal-content select {
+.modal-content input, .modal-content textarea {
   width: 100%;
-  margin-bottom: 10px;
-  padding: 8px;
+  margin-bottom: 8px;
+  padding: 6px;
 }
 
-.modal-content button {
-  width: 100%;
-  background: var(--primary);
-  color: white;
-  border: none;
-  padding: 8px;
-  border-radius: 4px;
-  font-weight: 600;
+@media (max-width: 600px) {
+  .board { gap: 8px; }
+  .list { width: 240px; }
 }
 
-.priority-high { border-left: 5px solid #ff5630; }
-.priority-medium { border-left: 5px solid #ffab00; }
-.priority-low { border-left: 5px solid #36b37e; }
-</style>
+  </style>
 </head>
-
 <body>
-
-<header>
-  📌 Task Board
-  <button onclick="openModal()">+ Criar</button>
-</header>
-
-<div class="board">
-  <div class="list">
-    <h3>A Fazer</h3>
-    <div class="cards" id="todo"></div>
-  </div>
-
-  <div class="list">
-    <h3>Em Andamento</h3>
-    <div class="cards" id="doing"></div>
-  </div>
-
-  <div class="list">
-    <h3>Concluído</h3>
-    <div class="cards" id="done"></div>
-  </div>
-</div>
-
-<!-- Modal -->
-<div class="modal" id="modal">
-  <div class="modal-content">
-    <input id="title" placeholder="Título">
-    <textarea id="desc" placeholder="Descrição"></textarea>
-    <input type="date" id="date">
-    <select id="priority">
-      <option value="low">Baixa</option>
-      <option value="medium">Média</option>
-      <option value="high">Alta</option>
-    </select>
-    <button onclick="addTask()">Salvar</button>
-  </div>
-</div>
-
-<script>
-const columns = ["todo", "doing", "done"];
-
-columns.forEach(col => {
-  new Sortable(document.getElementById(col), {
-    group: "kanban",
-    animation: 150,
-    onEnd: save
-  });
-});
-
-function openModal() {
-  document.getElementById("modal").style.display = "flex";
-}
-
-function closeModal() {
-  document.getElementById("modal").style.display = "none";
-}
-
-function addTask() {
-  const title = titleEl.value;
-  if (!title) return;
-
-  const card = document.createElement("div");
-  card.className = `card priority-${priority.value}`;
-  card.innerHTML = `
-    <strong>${title}</strong>
-    <small>${desc.value}</small>
-    <small>📅 ${date.value || "sem data"}</small>
-    <div class="actions">
-      <button onclick="this.closest('.card').remove(); save()">🗑</button>
+  <header>
+    <h1>Meu Quadro</h1>
+    <button onclick="addList()">+ Lista</button>
+  </header>  <main>
+    <div class="board" id="board"></div>
+  </main>  <div class="modal" id="modal">
+    <div class="modal-content">
+      <h3>Novo Card</h3>
+      <input id="cardTitle" placeholder="Título do card" />
+      <textarea id="cardDesc" placeholder="Descrição"></textarea>
+      <button onclick="saveCard()">Salvar</button>
+      <button onclick="closeModal()">Cancelar</button>
     </div>
-  `;
+  </div>  <script>
+    let board = JSON.parse(localStorage.getItem('board')) || [
+      { title: 'Hoje', cards: [] },
+      { title: 'Esta semana', cards: [] },
+      { title: 'Mais tarde', cards: [] }
+    ];
 
-  todo.appendChild(card);
-  save();
-  closeModal();
-  titleEl.value = desc.value = date.value = "";
-}
+    let currentListIndex = null;
 
-function save() {
-  const data = {};
-  columns.forEach(c => data[c] = document.getElementById(c).innerHTML);
-  localStorage.setItem("kanban", JSON.stringify(data));
-}
+    function render() {
+      const el = document.getElementById('board');
+      el.innerHTML = '';
 
-(function load() {
-  const data = JSON.parse(localStorage.getItem("kanban"));
-  if (!data) return;
-  columns.forEach(c => document.getElementById(c).innerHTML = data[c]);
-})();
-</script>
+      board.forEach((list, i) => {
+        const listEl = document.createElement('div');
+        listEl.className = 'list';
 
-</body>
+        listEl.innerHTML = `
+          <header>${list.title}</header>
+          <div class="cards">
+            ${list.cards.map(c => `<div class="card">${c.title}</div>`).join('')}
+          </div>
+          <button class="add-card" onclick="openModal(${i})">+ Adicionar um card</button>
+        `;
+
+        el.appendChild(listEl);
+      });
+
+      const addListBtn = document.createElement('div');
+      addListBtn.className = 'add-list';
+      addListBtn.innerText = '+ Adicionar lista';
+      addListBtn.onclick = addList;
+      el.appendChild(addListBtn);
+
+      localStorage.setItem('board', JSON.stringify(board));
+    }
+
+    function addList() {
+      const title = prompt('Nome da lista');
+      if (!title) return;
+      board.push({ title, cards: [] });
+      render();
+    }
+
+    function openModal(listIndex) {
+      currentListIndex = listIndex;
+      document.getElementById('modal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('modal').style.display = 'none';
+      document.getElementById('cardTitle').value = '';
+      document.getElementById('cardDesc').value = '';
+    }
+
+    function saveCard() {
+      const title = document.getElementById('cardTitle').value;
+      if (!title) return;
+      board[currentListIndex].cards.push({ title });
+      closeModal();
+      render();
+    }
+
+    render();
+  </script></body>
 </html>
