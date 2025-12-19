@@ -1,100 +1,89 @@
-<!DOCTYPE html><html lang="pt-BR">
+<!DOCTYPE html>
+<html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Trello Clone Completo</title>
-<style>
-:root{
---bg:#5b4a8a;--header:#4b3b73;--list:#ebecf0;--card:#fff;--text:#172b4d
-}
-*{box-sizing:border-box;font-family:system-ui}
-body{margin:0;background:linear-gradient(135deg,#5b4a8a,#7b61b5)}
-header{height:48px;background:var(--header);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 12px}
-header button{background:#6f5bd7;border:none;color:#fff;padding:6px 10px;border-radius:4px}
-.board-wrapper{height:calc(100vh - 48px);overflow-x:auto}
-.board{display:flex;gap:12px;padding:12px;height:100%}
-.list{background:var(--list);width:272px;min-width:272px;border-radius:8px;display:flex;flex-direction:column}
-.list-header{padding:8px;font-weight:600;display:flex;justify-content:space-between}
-.cards{padding:0 8px;flex:1;overflow-y:auto}
-.card{background:var(--card);border-radius:6px;padding:8px;margin-bottom:8px;box-shadow:0 1px 2px rgba(0,0,0,.2);cursor:grab}
-.labels span{display:inline-block;width:40px;height:6px;border-radius:4px;margin-right:4px}
-.add-card, .add-list{border:none;background:none;color:#5e6c84;padding:8px;cursor:pointer}
-.add-list{background:rgba(255,255,255,.3);color:#fff;border-radius:8px;width:272px}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center}
-.modal-content{background:#fff;padding:16px;border-radius:8px;width:90%;max-width:420px}
-input,textarea{width:100%;margin-bottom:8px;padding:6px}
-.hidden{display:none}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minha Trello - Gerenciador de Tarefas</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-<header>
-<span>Meu Quadro</span>
-<div>
-<button onclick="openSettings()">⚙</button>
-<button onclick="addList()">+ Lista</button>
-</div>
-</header>
-<div class="board-wrapper"><div class="board" id="board"></div></div><!-- LOGIN --><div class="modal" id="login">
-<div class="modal-content">
-<h3>Login</h3>
-<input id="user" placeholder="Usuário">
-<input id="pass" type="password" placeholder="Senha">
-<button onclick="login()">Entrar</button>
-</div>
-</div><!-- CARD MODAL --><div class="modal" id="cardModal">
-<div class="modal-content">
-<input id="cardTitle" placeholder="Título">
-<input type="date" id="cardDate">
-<div>
-<button onclick="setLabel('red')" style="background:#eb5a46"> </button>
-<button onclick="setLabel('green')" style="background:#61bd4f"> </button>
-<button onclick="setLabel('yellow')" style="background:#f2d600"> </button>
-</div>
-<button onclick="saveCard()">Salvar</button>
-<button onclick="closeCardModal()">Cancelar</button>
-</div>
-</div><!-- SETTINGS --><div class="modal" id="settings">
-<div class="modal-content">
-<h3>Configurações</h3>
-<button onclick="resetAll()">Resetar quadro</button>
-<button onclick="closeSettings()">Fechar</button>
-</div>
-</div><script>
-if(!localStorage.getItem('auth'))document.getElementById('login').style.display='flex'
-function login(){if(user.value&&pass.value){localStorage.setItem('auth','ok');login.style.display='none'}}
-let board=JSON.parse(localStorage.getItem('board'))||[
-{title:'Hoje',cards:[]},{title:'Esta semana',cards:[]},{title:'Mais tarde',cards:[]}
-]
-let currentList=null,currentLabel=null
-function render(){boardEl.innerHTML='';board.forEach((l,li)=>{
-const list=document.createElement('div');list.className='list'
-list.innerHTML=`<div class='list-header'><span contenteditable onblur="editList(${li},this.innerText)">${l.title}</span><button onclick="delList(${li})">✕</button></div>
-<div class='cards' ondragover='event.preventDefault()' ondrop='drop(event,${li})'>
-${l.cards.map((c,ci)=>`<div class='card' draggable ondragstart='drag(event,${li},${ci})'>
-<div class='labels'>${c.label?`<span style='background:${c.label}'></span>`:''}</div>
-${c.title}${c.date?`<small> 📅 ${c.date}</small>`:''}
-<button onclick='delCard(${li},${ci})'>🗑</button>
-</div>`).join('')}</div>
-<button class='add-card' onclick='openCardModal(${li})'>+ Adicionar card</button>`
-boardEl.appendChild(list)
-})
-const add=document.createElement('button');add.className='add-list';add.innerText='+ Adicionar lista';add.onclick=addList;boardEl.appendChild(add)
-localStorage.setItem('board',JSON.stringify(board))
-}
-function addList(){const t=prompt('Nome da lista');if(t){board.push({title:t,cards:[]});render()}}
-function editList(i,t){board[i].title=t;render()}
-function delList(i){board.splice(i,1);render()}
-function openCardModal(i){currentList=i;cardModal.style.display='flex'}
-function closeCardModal(){cardModal.style.display='none';cardTitle.value='';cardDate.value='';currentLabel=null}
-function setLabel(c){currentLabel=c}
-function saveCard(){board[currentList].cards.push({title:cardTitle.value,label:currentLabel,date:cardDate.value});closeCardModal();render()}
-function delCard(l,c){board[l].cards.splice(c,1);render()}
-let dragData=null
-function drag(e,l,c){dragData={l,c}}
-function drop(e,l){const card=board[dragData.l].cards.splice(dragData.c,1)[0];board[l].cards.push(card);render()}
-function openSettings(){settings.style.display='flex'}
-function closeSettings(){settings.style.display='none'}
-function resetAll(){localStorage.clear();location.reload()}
-render()
-</script></body>
+    <header>
+        <h1><i class="fab fa-trello"></i> Minha Trello</h1>
+        <div class="header-actions">
+            <button id="addBoardBtn" class="btn-primary"><i class="fas fa-plus"></i> Nova Lista</button>
+            <button id="configBtn" class="btn-secondary"><i class="fas fa-cog"></i> Configurações</button>
+        </div>
+    </header>
+
+    <main id="boardContainer">
+        <!-- Listas serão criadas aqui dinamicamente -->
+    </main>
+
+    <!-- Modal Nova Lista -->
+    <div id="listModal" class="modal">
+        <div class="modal-content">
+            <h3>Nova Lista</h3>
+            <input type="text" id="listTitle" placeholder="Nome da lista..." maxlength="30">
+            <div class="modal-actions">
+                <button id="createListBtn" class="btn-primary">Criar</button>
+                <button id="closeListModal" class="btn-secondary">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Novo Card -->
+    <div id="cardModal" class="modal">
+        <div class="modal-content">
+            <h3>Novo Card</h3>
+            <input type="text" id="cardTitle" placeholder="Título do card..." maxlength="100">
+            <div class="form-group">
+                <label>Descrição</label>
+                <textarea id="cardDesc" placeholder="Descreva a tarefa..."></textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Data</label>
+                    <input type="date" id="cardDate">
+                </div>
+                <div class="form-group">
+                    <label>Label</label>
+                    <select id="cardLabel">
+                        <option value="">Sem label</option>
+                        <option value="red">Vermelho</option>
+                        <option value="orange">Laranja</option>
+                        <option value="yellow">Amarelo</option>
+                        <option value="green">Verde</option>
+                        <option value="blue">Azul</option>
+                        <option value="purple">Roxo</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button id="createCardBtn" class="btn-primary">Criar Card</button>
+                <button id="closeCardModal" class="btn-secondary">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Card Detalhes -->
+    <div id="cardDetailModal" class="modal card-detail-modal">
+        <div class="modal-content large">
+            <div class="card-header">
+                <input type="text" id="editCardTitle" class="card-title-edit">
+                <div class="card-actions">
+                    <button id="editCardLabelBtn" class="label-btn"><i class="fas fa-tag"></i></button>
+                    <button id="editCardDateBtn" class="date-btn"><i class="fas fa-calendar"></i></button>
+                    <button id="deleteCardBtn" class="delete-btn"><i class="fas fa-trash"></i></button>
+                    <button id="closeCardDetail" class="close-btn">&times;</button>
+                </div>
+            </div>
+            <textarea id="editCardDesc" class="card-desc-edit" placeholder="Adicione uma descrição..."></textarea>
+            <div id="cardLabelDisplay" class="label-display"></div>
+            <div id="cardDateDisplay" class="date-display"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
 </html>
